@@ -104,3 +104,44 @@ CREATE TABLE `reactions` (
   `emoji_name` VARCHAR(255) NOT NULL,
   `created_at` BIGINT NOT NULL
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+
+-- インデックス
+CREATE INDEX idx_icons_user_id ON icons (user_id);
+CREATE INDEX idx_livecomment_reports_livecomment_id ON livecomment_reports (livecomment_id);
+CREATE INDEX idx_livecomment_reports_livestream_id ON livecomment_reports (livestream_id);
+CREATE INDEX idx_livecomment_reports_user_id ON livecomment_reports (user_id);
+CREATE INDEX idx_livecomments_livestream_id ON livecomments (livestream_id);
+CREATE INDEX idx_livecomments_user_id ON livecomments (user_id);
+CREATE INDEX idx_livestream_tags_livestream_id ON livestream_tags (livestream_id);
+CREATE INDEX idx_livestream_tags_tag_id ON livestream_tags (tag_id);
+CREATE INDEX idx_livestream_viewers_history_livestream_id ON livestream_viewers_history (livestream_id);
+CREATE INDEX idx_livestream_viewers_history_user_id ON livestream_viewers_history (user_id);
+CREATE INDEX idx_livestreams_user_id ON livestreams (user_id);
+CREATE INDEX idx_ng_words_livestream_id ON ng_words (livestream_id);
+CREATE INDEX idx_ng_words_user_id ON ng_words (user_id);
+CREATE INDEX idx_reactions_livestream_id ON reactions (livestream_id);
+CREATE INDEX idx_reactions_user_id ON reactions (user_id);
+CREATE INDEX idx_themes_user_id ON themes (user_id);
+
+-- ハッシュ
+ALTER TABLE icons ADD COLUMN image_hash CHAR(64) NOT NULL DEFAULT '';
+
+DELIMITER //
+
+CREATE TRIGGER before_insert_image_hash
+BEFORE INSERT ON icons
+FOR EACH ROW
+BEGIN
+    SET NEW.image_hash = SHA2(NEW.image, 256);
+END; //
+
+CREATE TRIGGER before_update_image_hash
+BEFORE UPDATE ON icons
+FOR EACH ROW
+BEGIN
+    IF NEW.image != OLD.image THEN
+        SET NEW.image_hash = SHA2(NEW.image, 256);
+    END IF;
+END; //
+
+DELIMITER ;
